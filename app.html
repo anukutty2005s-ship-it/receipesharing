@@ -1,0 +1,228 @@
+
+<div class="site-shell">
+  <header class="topbar">
+    <a class="brand" href="#" (click)="$event.preventDefault(); openPage('home')">
+      <span class="brand-icon">♡</span>
+      <span>ShareMyRecipe<small>Made with love, shared with everyone</small></span>
+    </a>
+
+    <nav class="navigation">
+      <button type="button" [class.active]="activePage === 'home'" (click)="openPage('home')">Home</button>
+      <button type="button" [class.active]="activePage === 'add'" (click)="openPage('add')">＋ Add Recipe</button>
+      <button type="button" [class.active]="activePage === 'saved'" (click)="openPage('saved')">♡ Saved</button>
+    </nav>
+  </header>
+
+  @if (activePage === 'home') {
+    <main>
+      <section class="hero">
+        <div class="hero-content">
+          <span class="eyebrow">GOOD FOOD, GOOD MOOD</span>
+          <h1>Every recipe has<br> a <em>story to share.</em></h1>
+          <p>Discover homemade favourites, learn something delicious, and share your own recipes with our food-loving community.</p>
+          <button class="primary-button" type="button" (click)="openPage('add')">Share Your Recipe <span>♡</span></button>
+        </div>
+        <div class="hero-art">
+          <img src="https://images.unsplash.com/photo-1547592180-85f173990554?auto=format&fit=crop&w=1000&q=85" alt="A table filled with delicious food">
+          <span class="floating-note">A little taste of home ✨</span>
+        </div>
+      </section>
+
+      <section class="recipe-section">
+        <div class="section-heading">
+          <div>
+            <span class="eyebrow">FROM OUR KITCHEN TO YOURS</span>
+            <h2>Recipes to fall for</h2>
+            <p>Find your next favourite dish.</p>
+          </div>
+          <button class="text-button" type="button" (click)="openPage('add')">＋ Add yours</button>
+        </div>
+
+        <div class="search-row">
+          <label class="search-box">
+            <span>⌕</span>
+            <input type="search" [(ngModel)]="searchText" name="homeSearch" placeholder="Search recipes, cooks or dishes...">
+          </label>
+          <div class="filter-buttons">
+            <button type="button" [class.selected]="activeFilter === 'all'" (click)="activeFilter = 'all'">All recipes</button>
+            <button type="button" [class.selected]="activeFilter === 'popular'" (click)="activeFilter = 'popular'">♥ Popular</button>
+          </div>
+        </div>
+
+        <p class="result-count">{{ filteredRecipes.length }} recipe(s) to explore</p>
+
+        @if (filteredRecipes.length > 0) {
+          <div class="recipe-grid">
+            @for (recipe of filteredRecipes; track recipe.id) {
+              <article class="recipe-card" [class.expanded]="expandedRecipeId === recipe.id">
+                <div class="recipe-image" (click)="toggleRecipe(recipe)" (keydown.enter)="toggleRecipe(recipe)" tabindex="0" role="button" [attr.aria-label]="'View ' + recipe.title">
+                  <img [src]="recipe.image" [alt]="recipe.title" (error)="$any($event.target).src='https://images.unsplash.com/photo-1490645935967-10de6ba17061?auto=format&fit=crop&w=900&q=85'">
+                  <span class="image-tag">Homemade ♡</span>
+                </div>
+
+                <div class="recipe-card-body">
+                  <p class="recipe-author">SHARED BY {{ recipe.author }}</p>
+                  <h3 (click)="toggleRecipe(recipe)">{{ recipe.title }}</h3>
+                  <p class="recipe-description">{{ recipe.description }}</p>
+
+                  <div class="card-actions">
+                    <button type="button" [class.liked]="recipe.liked" (click)="toggleLike(recipe, $event)" [attr.aria-label]="'Like ' + recipe.title">♥ <span>{{ recipe.likes }}</span></button>
+                    <button type="button" [class.saved]="recipe.saved" (click)="toggleSave(recipe, $event)" [attr.aria-label]="'Save ' + recipe.title">{{ recipe.saved ? '♥ Saved' : '♡ Save' }}</button>
+                    <button class="view-button" type="button" (click)="toggleRecipe(recipe)">{{ expandedRecipeId === recipe.id ? 'Show less −' : 'View recipe →' }}</button>
+                  </div>
+
+                  @if (expandedRecipeId === recipe.id) {
+                    <div class="recipe-details">
+                      <h4>Ingredients</h4>
+                      <ul>
+                        @for (ingredient of recipe.ingredients; track $index) {
+                          <li>{{ ingredient }}</li>
+                        }
+                      </ul>
+                      <h4>Cooking instructions</h4>
+                      <ol>
+                        @for (instruction of recipe.instructions; track $index) {
+                          <li>{{ instruction }}</li>
+                        }
+                      </ol>
+                    </div>
+                  }
+                </div>
+              </article>
+            }
+          </div>
+        } @else {
+          <div class="empty-state">
+            <span>🍲</span>
+            <h3>No recipes found</h3>
+            <p>Try another search, or share a recipe of your own.</p>
+            <button class="primary-button" type="button" (click)="openPage('add')">Add a recipe</button>
+          </div>
+        }
+      </section>
+    </main>
+  }
+
+  @if (activePage === 'add') {
+    <main class="form-page">
+      <div class="form-intro">
+        <span class="eyebrow">YOUR KITCHEN, YOUR STORY</span>
+        <h1>Share something <em>delicious.</em></h1>
+        <p>Every family has a favourite. Add yours and let someone else fall in love with it.</p>
+      </div>
+
+      <form class="recipe-form" novalidate (ngSubmit)="addRecipe()">
+        <div class="form-title">
+          <span class="form-icon">♡</span>
+          <div>
+            <h2>Your recipe card</h2>
+            <p>Fields marked with * are required.</p>
+          </div>
+        </div>
+
+        <label>
+          Your name *
+          <input type="text" name="newAuthor" [(ngModel)]="newAuthor" placeholder="e.g. Anu" required>
+        </label>
+
+        <label>
+          Recipe name *
+          <input type="text" name="newTitle" [(ngModel)]="newTitle" placeholder="e.g. Grandma's lemon rice" required>
+        </label>
+
+        <label>
+          Short description *
+          <textarea name="newDescription" [(ngModel)]="newDescription" placeholder="What makes this dish special?" rows="3" required></textarea>
+        </label>
+
+        <label>
+          Food photo URL <span class="optional">(optional)</span>
+          <input type="text" name="newImage" [(ngModel)]="newImage" placeholder="Paste an image URL starting with https://">
+        </label>
+
+        <label>
+          Ingredients *
+          <span class="field-hint">Write one ingredient per line.</span>
+          <textarea name="newIngredients" [(ngModel)]="newIngredients" placeholder="2 cups rice&#10;1 onion&#10;Salt to taste" rows="5" required></textarea>
+        </label>
+
+        <label>
+          Cooking instructions *
+          <span class="field-hint">Write each step on a new line.</span>
+          <textarea name="newInstructions" [(ngModel)]="newInstructions" placeholder="Wash and cook the rice.&#10;Prepare the seasoning.&#10;Mix and serve." rows="5" required></textarea>
+        </label>
+
+        <div class="form-actions">
+          <button class="secondary-button" type="button" (click)="openPage('home')">Cancel</button>
+          <button class="primary-button submit-button" type="submit">Publish My Recipe ♡</button>
+        </div>
+      </form>
+    </main>
+  }
+
+  @if (activePage === 'saved') {
+    <main class="recipe-section saved-page">
+      <div class="section-heading">
+        <div>
+          <span class="eyebrow">YOUR PERSONAL COOKBOOK</span>
+          <h2>Recipes you love</h2>
+          <p>Your saved recipes are collected here.</p>
+        </div>
+      </div>
+
+      @if (filteredRecipes.length > 0) {
+        <div class="recipe-grid">
+          @for (recipe of filteredRecipes; track recipe.id) {
+            <article class="recipe-card" [class.expanded]="expandedRecipeId === recipe.id">
+              <div class="recipe-image" (click)="toggleRecipe(recipe)" (keydown.enter)="toggleRecipe(recipe)" tabindex="0" role="button" [attr.aria-label]="'View ' + recipe.title">
+                <img [src]="recipe.image" [alt]="recipe.title" (error)="$any($event.target).src='https://images.unsplash.com/photo-1490645935967-10de6ba17061?auto=format&fit=crop&w=900&q=85'">
+                <span class="image-tag">Saved with love ♡</span>
+              </div>
+
+              <div class="recipe-card-body">
+                <p class="recipe-author">SHARED BY {{ recipe.author }}</p>
+                <h3 (click)="toggleRecipe(recipe)">{{ recipe.title }}</h3>
+                <p class="recipe-description">{{ recipe.description }}</p>
+
+                <div class="card-actions">
+                  <button type="button" [class.liked]="recipe.liked" (click)="toggleLike(recipe, $event)">♥ <span>{{ recipe.likes }}</span></button>
+                  <button type="button" [class.saved]="recipe.saved" (click)="toggleSave(recipe, $event)">♥ Saved</button>
+                  <button class="view-button" type="button" (click)="toggleRecipe(recipe)">{{ expandedRecipeId === recipe.id ? 'Show less −' : 'View recipe →' }}</button>
+                </div>
+
+                @if (expandedRecipeId === recipe.id) {
+                  <div class="recipe-details">
+                    <h4>Ingredients</h4>
+                    <ul>
+                      @for (ingredient of recipe.ingredients; track $index) {
+                        <li>{{ ingredient }}</li>
+                      }
+                    </ul>
+                    <h4>Cooking instructions</h4>
+                    <ol>
+                      @for (instruction of recipe.instructions; track $index) {
+                        <li>{{ instruction }}</li>
+                      }
+                    </ol>
+                  </div>
+                }
+              </div>
+            </article>
+          }
+        </div>
+      } @else {
+        <div class="empty-state">
+          <span>♡</span>
+          <h3>Your cookbook is waiting</h3>
+          <p>You haven't saved any recipes yet. Visit Home and tap “Save” on a recipe you love.</p>
+          <button class="primary-button" type="button" (click)="openPage('home')">Explore recipes</button>
+        </div>
+      }
+    </main>
+  }
+
+  <footer class="footer">
+    <a class="footer-brand" href="#" (click)="$event.preventDefault(); openPage('home')">ShareMyRecipe ♡</a>
+    <p>Good food tastes even better when it's shared.</p>
+  </footer>
+</div>
